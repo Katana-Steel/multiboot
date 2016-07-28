@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import sys
+# for pathwalk
+# import os
 # import menu
 
 from PyQt5.QtWidgets import QApplication
