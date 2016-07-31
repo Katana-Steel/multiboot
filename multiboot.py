@@ -26,40 +26,39 @@ class MenuCreator(QDialog):
         s.setHeight(0)
         self.setMinimumSize(s)
         self.main = QVBoxLayout(self)
-        hlay = QHBoxLayout
+        hlay = QHBoxLayout()
         self.main.addLayout(hlay)
-        hlay.addSpacer()
+        hlay.addStretch()
         self.create = QPushButton('Create USB')
         hlay.addWidget(self.create)
-        hlay.addSpacer()
-        hlay = QHBoxLayout
+        hlay.addStretch()
+        hlay = QHBoxLayout()
         hlay.addWidget(QLabel('USB device: '))
         self.dev = QComboBox()
-        self.getAvailableUSBDrives(self.dev)
+        self.getAvailableUSBDevices(self.dev)
         hlay.addWidget(self.dev)
-        self.main.addLayout(hlay)        hlay = QHBoxLayout
+        self.main.addLayout(hlay)
+        hlay = QHBoxLayout()
         hlay.addWidget(QLabel('Selected filesystem:'))
         self.fs = QComboBox()
         hlay.addWidget(self.fs)
         self.main.addLayout(hlay)
         self.getAvailableFilesystems(self.fs)
-        hlay = QHBoxLayout
-        hlay.addSpacing()
-        btn = QPushButton('add ISO File'
-        hlay.addWidget(QLabel('select filesystem'))
-        self.fs = QComboBox()
-        hlay.addWidget(self.fs)
+        hlay = QHBoxLayout()
+        hlay.addStretch()
+        btn = QPushButton('add ISO File')
+        hlay.addWidget(btn)
+        hlay.addStretch()
         self.main.addLayout(hlay)
-        
+
     def getAvailableFilesystems(self, cbox):
         # iterate over available mkfs.* programs
-        cbox.insertItem('ext4')
-
+        cbox.insertItem(0, 'ext4')
 
     def getAvailableUSBDevices(self, dev):
         # insert actual code for detecting
         # usb flash storage
-        dev.insertItem('/dev/sdb')
+        dev.insertItem(0, '/dev/sdb')
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
