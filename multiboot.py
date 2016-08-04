@@ -3,6 +3,7 @@ import sys
 # for pathwalk
 # import os
 # import menu
+import fs
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QDialog
@@ -52,13 +53,12 @@ class MenuCreator(QDialog):
         self.main.addLayout(hlay)
 
     def getAvailableFilesystems(self, cbox):
-        # iterate over available mkfs.* programs
-        cbox.insertItem(0, 'ext4')
+        for f in fs.fileSystems:
+            cbox.insertItem(0, str(f), f)
 
     def getAvailableUSBDevices(self, dev):
-        # insert actual code for detecting
-        # usb flash storage
-        dev.insertItem(0, '/dev/sdb')
+        for u in fs.getUSBDevices():
+            dev.insertItem(0, str(u), u)
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
