@@ -1,12 +1,8 @@
 import os
 
-pfd = os.popen("find /usr/sbin /sbin -name 'mkfs.*'| cut -d. -f2 | sort")
-cmds = pfd.read().split('\n')[0:-1]
-
-fileSystems = []
 
 class mkfs:
-    """how to create a filesystem"""
+    """how to create a filesystem """
     def __init__(self, type='ext2'):
         self.cmd = 'mkfs.' + type
 
@@ -17,6 +13,7 @@ class mkfs:
     def __str__(self):
         return self.cmd.split('.')[1]
 
+
 class usbDev:
     def __init__(self, path):
         self.path = path
@@ -24,21 +21,35 @@ class usbDev:
     def __str__(self):
         return self.path
 
+    def partitions(self):
+        return [(1, 'vfat')]
+
+
 def addFs(fs):
     global fileSystems
     fileSystems.append(fs)
 
+
 def getUSBDevices():
     usbTab = []
-    # do logic to locate all attached USB flash drives
-    usbTab.append(usbDev('/dev/sdb'))
-    usbTab.append(usbDev('/dev/sde'))
+    # copied verbetum from : http://unix.stackexchange.com/a/60335
+    usbCmd = os.popen("grep -Hv '^0$' /sys/block/*/removable |"
+                      " sed 's/removable:.*$/device\\/uevent/' |"
+                      " xargs grep -H '^DRIVER=sd' |"
+                      " sed 's/device.uevent.*$/size/' |"
+                      " xargs grep -Hv '^0$' | cut -d / -f 4")
+    devs = usbCmd.read().split('\n')[0:-1]
+    for dev in devs:
+        usbTab.append(usbDev('/dev/' + dev))
     return usbTab
 
+
+fileSystems = []
+pfd = os.popen("find /usr/sbin /sbin -name 'mkfs.*'| cut -d. -f2 | sort")
+cmds = pfd.read().split('\n')[0:-1]
 if 'ext4' in cmds:
     addFs(mkfs('ext4'))
 if 'vfat' in cmds:
     addFs(mkfs('vfat'))
 if 'xfs' in cmds:
     addFs(mkfs('xfs'))
-

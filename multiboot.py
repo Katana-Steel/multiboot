@@ -15,10 +15,18 @@ from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QHBoxLayout
 # from PyQt5.QtGui import QIntValidator
-# from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot
 
 
 class MenuCreator(QDialog):
+
+    @pyqtSlot()
+    def scanUsb(self):
+        dev = self.dev.currentData()
+        parts = dev.partitions()
+        if parts[0][0] == 1:
+            idx = self.fs.findText(parts[0][1])
+            self.fs.setCurrentIndex(idx)
 
     def generateUi(self):
         self.setWindowTitle('Bootmenu creator')
@@ -31,7 +39,10 @@ class MenuCreator(QDialog):
         self.main.addLayout(hlay)
         hlay.addStretch()
         self.create = QPushButton('Create USB')
+        self.scan = QPushButton('Scan selected USB')
+        self.scan.clicked.connect(self.scanUsb)
         hlay.addWidget(self.create)
+        hlay.addWidget(self.scan)
         hlay.addStretch()
         hlay = QHBoxLayout()
         hlay.addWidget(QLabel('USB device: '))
