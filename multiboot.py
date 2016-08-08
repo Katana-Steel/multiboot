@@ -23,10 +23,15 @@ class MenuCreator(QDialog):
     @pyqtSlot()
     def scanUsb(self):
         dev = self.dev.currentData()
-        parts = dev.partitions()
-        if parts[0][0] == 1:
-            idx = self.fs.findText(parts[0][1])
-            self.fs.setCurrentIndex(idx)
+        if dev is not None:
+            parts = dev.partitions()
+            if parts[0][0] == 1:
+                idx = self.fs.findText(parts[0][1])
+                self.fs.setCurrentIndex(idx)
+
+    @pyqtSlot(int)
+    def updateUsb(self, idx):
+        self.getAvailableUSBDevices(self.dev)
 
     def generateUi(self):
         self.setWindowTitle('Bootmenu creator')
@@ -47,6 +52,7 @@ class MenuCreator(QDialog):
         hlay = QHBoxLayout()
         hlay.addWidget(QLabel('USB device: '))
         self.dev = QComboBox()
+        self.dev.activated.connect(self.updateUsb)
         self.getAvailableUSBDevices(self.dev)
         hlay.addWidget(self.dev)
         self.main.addLayout(hlay)
@@ -68,8 +74,11 @@ class MenuCreator(QDialog):
             cbox.insertItem(0, str(f), f)
 
     def getAvailableUSBDevices(self, dev):
+        dev.clear()
         for u in fs.getUSBDevices():
             dev.insertItem(0, str(u), u)
+        if dev.count() < 1:
+            dev.insertItem(0,u'', None)
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
