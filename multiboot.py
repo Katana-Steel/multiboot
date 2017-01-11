@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QDialog
 # from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QPushButton
 # from PyQt5.QtWidgets import QMessageBox
@@ -16,6 +17,8 @@ from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QHBoxLayout
 # from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import QTimer
+from PyQt5.uic import loadUi
 
 
 class MenuCreator(QDialog):
@@ -29,11 +32,18 @@ class MenuCreator(QDialog):
                 idx = self.fs.findText(parts[0][1])
                 self.fs.setCurrentIndex(idx)
 
+    @pyqtSlot()
     @pyqtSlot(int)
-    def updateUsb(self, idx):
+    def updateUsb(self, idx=None):
         self.getAvailableUSBDevices(self.dev)
 
     def generateUi(self):
+        self.loop = QTimer(self)
+        self.loop.setInterval(500)
+        self.loop.timeout.connect(self.updateUsb)
+#        self.ui = loadUi("ui/main.ui")
+#        self.main = QVBoxLayout(self)
+#        self.main.addWidget(self.ui)
         self.setWindowTitle('Bootmenu creator')
         s = self.size()
         s.setWidth(300)
@@ -64,21 +74,34 @@ class MenuCreator(QDialog):
         self.getAvailableFilesystems(self.fs)
         hlay = QHBoxLayout()
         hlay.addStretch()
-        btn = QPushButton('add ISO File')
-        hlay.addWidget(btn)
+        self.btn = QPushButton('add ISO File')
+        hlay.addWidget(self.btn)
         hlay.addStretch()
         self.main.addLayout(hlay)
+        hlay = QHBoxLayout()
+        hlay.addStretch()
+        self.img_list = QListWidget()
+        hlay.addWidget(self.img_list)
+        hlay.addStretch()
+        self.main.addLayout(hlay)
+        self.loop.start()
 
     def getAvailableFilesystems(self, cbox):
         for f in fs.fileSystems:
             cbox.insertItem(0, str(f), f)
 
     def getAvailableUSBDevices(self, dev):
+        txt = dev.currentText()
         dev.clear()
         for u in fs.getUSBDevices():
             dev.insertItem(0, str(u), u)
         if dev.count() < 1:
             dev.insertItem(0,u'', None)
+        else:
+            # check if our currently selected device is still there
+            idx = dev.findText(txt)
+            if idx != -1:
+                dev.setCurrentIndex(idx)
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
