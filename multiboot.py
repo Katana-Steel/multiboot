@@ -7,14 +7,11 @@ import fs
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QDialog
-# from PyQt5.QtWidgets import QLineEdit
 from PyQt5.QtWidgets import QComboBox
-from PyQt5.QtWidgets import QListWidget
-from PyQt5.QtWidgets import QLabel
+# from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtWidgets import QPushButton
 # from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QHBoxLayout
 # from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QTimer
@@ -37,53 +34,26 @@ class MenuCreator(QDialog):
     def updateUsb(self, idx=None):
         self.getAvailableUSBDevices(self.dev)
 
-    def generateUi(self):
-        self.loop = QTimer(self)
-        self.loop.setInterval(500)
-        self.loop.timeout.connect(self.updateUsb)
-#        self.ui = loadUi("ui/main.ui")
-#        self.main = QVBoxLayout(self)
-#        self.main.addWidget(self.ui)
+    def LoadUi(self):
         self.setWindowTitle('Bootmenu creator')
         s = self.size()
         s.setWidth(300)
         s.setHeight(0)
         self.setMinimumSize(s)
+        self.ui = loadUi("ui/main.ui")
         self.main = QVBoxLayout(self)
-        hlay = QHBoxLayout()
-        self.main.addLayout(hlay)
-        hlay.addStretch()
-        self.create = QPushButton('Create USB')
-        self.scan = QPushButton('Scan selected USB')
-        self.scan.clicked.connect(self.scanUsb)
-        hlay.addWidget(self.create)
-        hlay.addWidget(self.scan)
-        hlay.addStretch()
-        hlay = QHBoxLayout()
-        hlay.addWidget(QLabel('USB device: '))
-        self.dev = QComboBox()
-        self.dev.activated.connect(self.updateUsb)
-        self.getAvailableUSBDevices(self.dev)
-        hlay.addWidget(self.dev)
-        self.main.addLayout(hlay)
-        hlay = QHBoxLayout()
-        hlay.addWidget(QLabel('Selected filesystem:'))
-        self.fs = QComboBox()
-        hlay.addWidget(self.fs)
-        self.main.addLayout(hlay)
+        self.main.addWidget(self.ui)
+        self.fs = self.ui.findChild(QComboBox, 'fileSystem')
         self.getAvailableFilesystems(self.fs)
-        hlay = QHBoxLayout()
-        hlay.addStretch()
-        self.btn = QPushButton('add ISO File')
-        hlay.addWidget(self.btn)
-        hlay.addStretch()
-        self.main.addLayout(hlay)
-        hlay = QHBoxLayout()
-        hlay.addStretch()
-        self.img_list = QListWidget()
-        hlay.addWidget(self.img_list)
-        hlay.addStretch()
-        self.main.addLayout(hlay)
+        self.dev = self.ui.findChild(QComboBox, 'devices')
+        self.getAvailableUSBDevices(self.dev)
+        self.create = self.ui.findChild(QPushButton, 'createUsb')
+        self.scan = self.ui.findChild(QPushButton, 'scanDevice')
+        self.scan.clicked.connect(self.scanUsb)
+
+        self.loop = QTimer(self)
+        self.loop.setInterval(500)
+        self.loop.timeout.connect(self.updateUsb)
         self.loop.start()
 
     def getAvailableFilesystems(self, cbox):
@@ -92,11 +62,12 @@ class MenuCreator(QDialog):
 
     def getAvailableUSBDevices(self, dev):
         txt = dev.currentText()
+        usb_lst = fs.getUSBDevices()
         dev.clear()
-        for u in fs.getUSBDevices():
+        for u in usb_lst:
             dev.insertItem(0, str(u), u)
         if dev.count() < 1:
-            dev.insertItem(0,u'', None)
+            dev.insertItem(0, u'', None)
         else:
             # check if our currently selected device is still there
             idx = dev.findText(txt)
@@ -105,7 +76,7 @@ class MenuCreator(QDialog):
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        self.generateUi()
+        self.LoadUi()
 
 
 if __name__ == '__main__':
