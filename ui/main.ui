@@ -195,7 +195,26 @@
       </spacer>
      </item>
      <item>
-      <widget class="QListWidget" name="listWidget"/>
+      <widget class="QTreeWidget" name="menuTree">
+       <attribute name="headerDefaultSectionSize">
+        <number>80</number>
+       </attribute>
+       <column>
+        <property name="text">
+         <string>Distribution</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Image file</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Options</string>
+        </property>
+       </column>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_9">
