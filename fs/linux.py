@@ -17,9 +17,20 @@ class mkfs:
 class usbDev:
     def __init__(self, path):
         self.path = path
+        self.parts = [(1, 'vfat')]
 
     def __str__(self):
         return self.path
+
+    def format(self, fs, partno=0):
+        """
+        expects:
+        * fs is an mkfs type
+        * partno is the idx in the partitions list
+        """
+        p = str(self.parts[partno][0])
+        fs.format(self.path + p)
+        self.parts[partno] = (p, str(fs))
 
     def partitions(self):
         return [(1, 'vfat')]
