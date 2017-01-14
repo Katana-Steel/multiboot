@@ -33,7 +33,7 @@ class usbDev:
         self.parts[partno] = (p, str(fs))
 
     def partitions(self):
-        return [(1, 'vfat')]
+        return self.parts
 
 
 def addFs(fs):
