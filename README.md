@@ -8,7 +8,10 @@ should be as simple as:
 
 ## test
 ```
-cat test/teststart.py | python - | tee grub.cfg
+for t in tests/*; do
+  echo $(basename $t)
+  cat $t | python3 - 
+done
 ```
 
 ## requirements

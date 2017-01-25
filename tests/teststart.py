@@ -1,4 +1,6 @@
 import menu
+import tempfile
+from subprocess import call as os_call
 
 
 m = [menu.MenuSetup(
@@ -16,5 +18,19 @@ sm.AddEntry(menu.DebianLiveISO('/debian-xfce.iso',
 sm.AddEntry(menu.CentOSISO(disk='/dev/sda1'))
 m.append(menu.GentooISO(extra=gentoo_ex))
 
+st = ''
 for x in m:
-    print(x.WriteMenu())
+    st += x.WriteMenu() + '\n'
+
+script_check = None
+# setting text mode here as I don't need binary
+with tempfile.NamedTemporaryFile(mode='w') as f:
+    d = f.write(st)
+    del d
+    f.flush()
+    script_check = os_call(['grub-script-check', f.name])
+
+if script_check is not None and script_check > 0:
+    print('bad grub-menu generated')
+else:
+    print('the valid grub2 config is %d bytes' % len(st))
