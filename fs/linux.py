@@ -1,4 +1,7 @@
 import os
+import tempfile
+from subprocess import call as os_call
+import subprocess
 
 
 class mkfs:
@@ -17,7 +20,7 @@ class mkfs:
 class usbDev:
     def __init__(self, path):
         self.path = path
-        self.parts = [(1, 'vfat')]
+        self.parts = [('1', 'vfat')]
 
     def __str__(self):
         return self.path
@@ -34,6 +37,46 @@ class usbDev:
 
     def partitions(self):
         return self.parts
+
+
+# Makes a 20MB loopback device and creates partition table
+class vUsbDev(usbDev):
+    def _makeVDisk(self):
+        self.parts[0] = ('p1', self.parts[0][1])
+        self.image_file = self.path
+        os_call(['dd', 'bs=4096', 'count=5000', 'if=/dev/zero',
+                'of=' + self.image_file])
+        with subprocess.Popen(['sudo', 'losetup', '-f'],
+                              stdout=subprocess.PIPE,
+                              universal_newlines=True) as lo_list:
+            out = lo_list.stdout.read().split('\n')[:-1]
+            if len(out) > 0:
+                self.path = out[0]
+            else:
+                self.path = '/dev/loop0'
+        os_call(['sudo', 'losetup', '-P', self.path, self.image_file])
+        sfdisk_cmd = """
+label: dos
+label-id: 0x87b7e465
+device: /dev/loop0
+unit: sectors
+
+/dev/loop0p1 : start=        2048, size=       37952, type=c
+"""
+        with subprocess.Popen(['sudo', 'sfdisk', self.path],
+                              stdin=subprocess.PIPE,
+                              universal_newlines=True) as fdisk:
+            fdisk.communicate(input=sfdisk_cmd)
+        os_call(['sudo', 'mkfs.vfat', self.path + self.parts[0][0]])
+        self.__undoLo = ['sudo', 'losetup', '-d', self.path]
+
+    def __init__(self, path):
+        super().__init__(path)
+        self._makeVDisk()
+
+    def __del__(self):
+        os_call(self.__undoLo)
+        os.unlink(self.image_file)
 
 
 def addFs(fs):
@@ -53,6 +96,13 @@ def getUSBDevices():
     for dev in devs:
         usbTab.append(usbDev('/dev/' + dev))
     return usbTab
+
+
+def getFakeUsb():
+    ret = None
+    with tempfile.NamedTemporaryFile(delete=False) as f:
+        ret = vUsbDev(f.name)
+    return ret
 
 
 fileSystems = []
