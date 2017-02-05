@@ -56,7 +56,7 @@ class SubMenu(BootMenuOption):
         self.options.append(menu)
 
     def WriteMenu(self):
-        str = "submenuentry \"{0}\" ".format(self.name)
+        str = "submenu \"{0}\" ".format(self.name)
         str += "{\n"
         for m in self.options:
             str += m.WriteMenu()
