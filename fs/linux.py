@@ -4,23 +4,36 @@ from subprocess import call as os_call
 import subprocess
 
 
+class MkFSException(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
 class mkfs:
     """how to create a filesystem """
     def __init__(self, type='ext2'):
         self.cmd = 'mkfs.' + type
+        self.cmdlst = ['sudo', self.cmd, '-q']
 
     def format(self, dev=None):
         if dev is None:
-            raise Exception('A device is needed')
+            raise MkFSException('A device is needed')
+        os_call(self.cmdlst + [dev])
 
     def __str__(self):
         return self.cmd.split('.')[1]
 
 
+class mk_vfat(mkfs):
+    def __init__(self, type='vfat'):
+        self.cmd = 'mkfs.' + type
+        self.cmdlst = ['sudo', self.cmd]
+
+
 class usbDev:
     def __init__(self, path):
         self.path = path
-        self.parts = [('1', 'vfat')]
+        self.parts = self.partitions()
 
     def __str__(self):
         return self.path
@@ -36,13 +49,27 @@ class usbDev:
         self.parts[partno] = (p, str(fs))
 
     def partitions(self):
-        return self.parts
+        pts = []
+        with subprocess.Popen(['sudo', 'blkid'],
+                              stdout=subprocess.PIPE,
+                              universal_newlines=True) as fs_list:
+            for line in fs_list.stdout.read().split('\n'):
+                if self.path in line and 'TYPE' in line:
+                    t = line.replace(self.path, '').split(':')
+                    partno = t[0]
+                    fs_type = None
+                    for opts in t[1].split(' '):
+                        if 'TYPE' in opts[:4]:
+                            fs_type = opts.split('"')[1]
+                    if fs_type is not None:
+                        pts.append((partno, fs_type))
+        return pts
 
 
 # Makes a 20MB loopback device and creates partition table
 class vUsbDev(usbDev):
     def _makeVDisk(self):
-        self.parts[0] = ('p1', self.parts[0][1])
+        self.parts = [('p1', 'junk')]
         self.image_file = self.path
         os_call(['dd', 'bs=4096', 'count=5000', 'if=/dev/zero',
                 'of=' + self.image_file])
@@ -67,14 +94,17 @@ unit: sectors
                               stdin=subprocess.PIPE,
                               universal_newlines=True) as fdisk:
             fdisk.communicate(input=sfdisk_cmd)
-        os_call(['sudo', 'mkfs.vfat', self.path + self.parts[0][0]])
+        self.format(mk_vfat(), 0)
+        self.parts = self.partitions()
         self.__undoLo = ['sudo', 'losetup', '-d', self.path]
 
     def __init__(self, path):
-        super().__init__(path)
+        self.path = path
         self._makeVDisk()
 
     def __del__(self):
+        for p in self.parts:
+            os_call(['sudo', 'umount', self.path + p[0]])
         os_call(self.__undoLo)
         os.unlink(self.image_file)
 
@@ -111,6 +141,6 @@ cmds = pfd.read().split('\n')[0:-1]
 if 'ext4' in cmds:
     addFs(mkfs('ext4'))
 if 'vfat' in cmds:
-    addFs(mkfs('vfat'))
+    addFs(mk_vfat())
 if 'xfs' in cmds:
     addFs(mkfs('xfs'))

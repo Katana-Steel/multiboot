@@ -16,6 +16,7 @@ m.append(sm)
 sm.AddEntry(menu.DebianLiveISO('/debian-xfce.iso',
                                name='Debian Xfce', extra=deb_hook))
 sm.AddEntry(menu.CentOSISO(disk='/dev/sda1'))
+sm.AddEntry(menu.UbuntuLiveISO())
 m.append(menu.GentooISO(extra=gentoo_ex))
 
 st = ''
