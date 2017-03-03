@@ -25,7 +25,7 @@ class MenuCreator(QDialog):
         dev = self.dev.currentData()
         if dev is not None:
             parts = dev.partitions()
-            if parts[0][0] == 1:
+            if parts[0][0] == '1':
                 idx = self.fs.findText(parts[0][1])
                 self.fs.setCurrentIndex(idx)
 
@@ -62,7 +62,8 @@ class MenuCreator(QDialog):
 
     def getAvailableUSBDevices(self, dev):
         txt = dev.currentText()
-        usb_lst = fs.getUSBDevices()
+        before = len(self.usb_lst)
+        usb_lst = fs.getUSBDevices(self.usb_lst)
         dev.clear()
         for u in usb_lst:
             dev.insertItem(0, str(u), u)
@@ -73,9 +74,12 @@ class MenuCreator(QDialog):
             idx = dev.findText(txt)
             if idx != -1:
                 dev.setCurrentIndex(idx)
+        if before != len(usb_lst):
+            self.scanUsb()
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
+        self.usb_lst=[]
         self.LoadUi()
 
 

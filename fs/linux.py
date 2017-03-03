@@ -38,6 +38,11 @@ class usbDev:
     def __str__(self):
         return self.path
 
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return (other == self.path)
+        return (self == other)
+
     def format(self, fs, partno=0):
         """
         expects:
@@ -114,8 +119,7 @@ def addFs(fs):
     fileSystems.append(fs)
 
 
-def getUSBDevices():
-    usbTab = []
+def getUSBDevices(usbTab=[]):
     # copied verbetum from : http://unix.stackexchange.com/a/60335
     usbCmd = os.popen("grep -Hv '^0$' /sys/block/*/removable |"
                       " sed 's/removable:.*$/device\\/uevent/' |"
@@ -123,8 +127,11 @@ def getUSBDevices():
                       " sed 's/device.uevent.*$/size/' |"
                       " xargs grep -Hv '^0$' | cut -d / -f 4")
     devs = usbCmd.read().split('\n')[0:-1]
+    if len(devs) == 0:
+        usbTab.clear()
     for dev in devs:
-        usbTab.append(usbDev('/dev/' + dev))
+        if len([d for d in usbTab if d == ('/dev/' + dev)]) == 0:
+            usbTab.append(usbDev('/dev/' + dev))
     return usbTab
 
 
