@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QComboBox
 # from PyQt5.QtWidgets import QListWidget
 from PyQt5.QtWidgets import QPushButton
-# from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QVBoxLayout
 # from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import pyqtSlot
@@ -19,6 +19,31 @@ from PyQt5.uic import loadUi
 
 
 class MenuCreator(QDialog):
+
+    @pyqtSlot()
+    def aboutDialog(self):
+        about = """
+Multiboot:\na tool to create grub2 boot menu for booting multiple different ISO images
+Copyright (C) 2017  Rene Kjellerup aka Katana Steel
+
+This program is free software: you can redistribute it and/or modify \
+it under the terms of the GNU General Public License as published by \
+the Free Software Foundation, either version 3 of the License, or \
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful, \
+but WITHOUT ANY WARRANTY; without even the implied warranty of \
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the \
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License \
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+        QMessageBox(QMessageBox.Information, 'About Multiboot',about).exec_()
+
+    @pyqtSlot()
+    def addIsoUi(self):
+        QMessageBox(QMessageBox.Information, 'Iso dialog','stub iso dialog').exec_()
 
     @pyqtSlot()
     def scanUsb(self):
@@ -43,13 +68,17 @@ class MenuCreator(QDialog):
         self.ui = loadUi("ui/main.ui")
         self.main = QVBoxLayout(self)
         self.main.addWidget(self.ui)
+        about = self.ui.findChild(QPushButton, 'about')
+        about.clicked.connect(self.aboutDialog)
         self.fs = self.ui.findChild(QComboBox, 'fileSystem')
         self.getAvailableFilesystems(self.fs)
         self.dev = self.ui.findChild(QComboBox, 'devices')
         self.getAvailableUSBDevices(self.dev)
         self.create = self.ui.findChild(QPushButton, 'createUsb')
-        self.scan = self.ui.findChild(QPushButton, 'scanDevice')
-        self.scan.clicked.connect(self.scanUsb)
+        scan = self.ui.findChild(QPushButton, 'scanDevice')
+        scan.clicked.connect(self.scanUsb)
+        iso = self.ui.findChild(QPushButton, 'addIso')
+        iso.clicked.connect(self.addIsoUi)
 
         self.loop = QTimer(self)
         self.loop.setInterval(500)
