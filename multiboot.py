@@ -8,14 +8,33 @@ import fs
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QComboBox
-# from PyQt5.QtWidgets import QListWidget
+from PyQt5.QtWidgets import QListView
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QVBoxLayout
 # from PyQt5.QtGui import QIntValidator
+from PyQt5.QtCore import QStringListModel
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import QTimer
 from PyQt5.uic import loadUi
+
+
+class IsoDialog(QDialog):
+    def __init__(self, parent=None):
+        QDialog.__init__(self, parent)
+        self.isos = ['gnome debian 9', 'xfce debian 9']
+        self.loadUi()
+
+    def loadUi(self):
+        self.setWindowTitle("Pick your ISO")
+        layout = QVBoxLayout(self)
+        ui = loadUi("ui/iso.ui")
+        self.resize(ui.size())
+        layout.addWidget(ui)
+        model = QStringListModel(ui)
+        view = ui.findChild(QListView, 'isoList')
+        model.setStringList(self.isos)
+        view.setModel(model)
 
 
 class MenuCreator(QDialog):
@@ -23,8 +42,8 @@ class MenuCreator(QDialog):
     @pyqtSlot()
     def aboutDialog(self):
         about = """
-Multiboot:\na tool to create grub2 boot menu for booting multiple different ISO images
-Copyright (C) 2017  Rene Kjellerup aka Katana Steel
+Multiboot:\na tool to create grub2 boot menu for booting multiple different \
+ISO images\nCopyright (C) 2017  Rene Kjellerup aka Katana Steel
 
 This program is free software: you can redistribute it and/or modify \
 it under the terms of the GNU General Public License as published by \
@@ -39,11 +58,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License \
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-        QMessageBox(QMessageBox.Information, 'About Multiboot',about).exec_()
+        QMessageBox(QMessageBox.Information, 'About Multiboot', about).exec_()
 
     @pyqtSlot()
     def addIsoUi(self):
-        QMessageBox(QMessageBox.Information, 'Iso dialog','stub iso dialog').exec_()
+        iso = IsoDialog(self)
+        iso.exec_()
 
     @pyqtSlot()
     def scanUsb(self):
@@ -108,7 +128,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        self.usb_lst=[]
+        self.usb_lst = []
         self.LoadUi()
 
 
