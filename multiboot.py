@@ -22,7 +22,13 @@ from PyQt5.uic import loadUi
 class IsoDialog(QDialog):
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
-        self.isos = ['gnome debian 9', 'xfce debian 9']
+        self.isos = [
+            'Gnome Debian 9 x64',
+            'XFCE Debian 9 x64',
+            'Linux Mint 18.1 Cinnamon x64',
+            'Linux Mint Debian Edition (2) x64',
+            'Ubuntu 16.04 (latest) Mate x64'
+        ]
         self.loadUi()
 
     def loadUi(self):

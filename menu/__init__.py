@@ -121,6 +121,7 @@ class CentOSISO(BootMenuOption):
         str += "}\n"
         return str
 
+
 class UbuntuLiveISO(BootMenuOption):
     def __init__(self, iso='/ubuntu.iso', name='Ubuntu', extra=''):
         self.iso = iso
@@ -132,8 +133,9 @@ class UbuntuLiveISO(BootMenuOption):
         str += "{\n"
         str += "  set ISOF=\"{0}\"\n".format(self.iso)
         str += "  loopback loop $ISOF \n"
-        str += "  linux (loop)/live/vmlinuz.efi boot=casper config iso-scan/filename=$ISOF"
-        str += " locale=en_US.UTF-8 {0} \n".format(self.extra)
+        str += "  linux (loop)/live/vmlinuz.efi boot=casper config"
+        str += " iso-scan/filename=$ISOF locale=en_US.UTF-8"
+        str += " {0}\n".format(self.extra)
         str += "  initrd (loop)/live/initrd.img \n"
         str += "}\n"
         return str
