@@ -2,13 +2,15 @@
 import sys
 # for pathwalk
 # import os
-# import menu
+import menu
 import fs
 
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QDialog
 from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QListView
+from PyQt5.QtWidgets import QTreeWidget
+from PyQt5.QtWidgets import QTreeWidgetItem
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QVBoxLayout
@@ -20,16 +22,26 @@ from PyQt5.uic import loadUi
 
 
 class IsoDialog(QDialog):
+
+    @pyqtSlot()
+    def selectDistribution(self):
+        modIdx = self.distList.selectedIndexes()[0]
+        print(modIdx, modIdx.row())
+        print(self.isos[modIdx.row()])
+        self.dist = self.isos[modIdx.row()]
+        self.accept()
+
     def __init__(self, parent=None):
         QDialog.__init__(self, parent)
         self.isos = [
             'Gnome Debian 9 x64',
             'XFCE Debian 9 x64',
-            'Linux Mint 18.1 Cinnamon x64',
+            'Linux Mint 18.4 Cinnamon x64',
             'Linux Mint Debian Edition (2) x64',
             'Ubuntu 16.04 (latest) Mate x64'
         ]
         self.loadUi()
+        self.dist = None
 
     def loadUi(self):
         self.setWindowTitle("Pick your ISO")
@@ -41,6 +53,9 @@ class IsoDialog(QDialog):
         view = ui.findChild(QListView, 'isoList')
         model.setStringList(self.isos)
         view.setModel(model)
+        self.distList = view
+        add = ui.findChild(QPushButton, 'add')
+        add.clicked.connect(self.selectDistribution)
 
 
 class MenuCreator(QDialog):
@@ -66,10 +81,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
         QMessageBox(QMessageBox.Information, 'About Multiboot', about).exec_()
 
+    def addDist(self, d):
+        m = None
+        iso_label = 'linux.iso'
+        if 'Debian' in d:
+            m = menu.DebianLiveISO(name=d)
+            iso_label = m.iso
+
+        twi = QTreeWidgetItem([d, iso_label, ''], 0)
+        twi.setData(4, 0, m)
+        mtree = self.ui.findChild(QTreeWidget, 'menuTree')
+        mtree.addTopLevelItem(twi)
+
     @pyqtSlot()
     def addIsoUi(self):
         iso = IsoDialog(self)
-        iso.exec_()
+        a = iso.exec_()
+        if a > 0:
+            self.addDist(iso.dist)
 
     @pyqtSlot()
     def scanUsb(self):
