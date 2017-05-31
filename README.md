@@ -3,7 +3,11 @@ project to create a multi iso boot USB flash drive
 
 ## running
 
-should be as simple as:
+requiers a user with sudo permissions for now... 
+it's only used to probe for attached storage devices to select USB drives
+and to check the partition tabel and filesystems.
+
+With that it should be as simple as:
 `python multiboot.py`
 
 ## test
