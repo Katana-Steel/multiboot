@@ -17,7 +17,7 @@ done
 ## requirements
 
 * python-qt5 or python3-pyqt5
-* grub2 or grub
+* grub2
 * filesystem creation tools of your choice, supported:
   * ext4
   * vfat
