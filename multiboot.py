@@ -106,7 +106,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
         if dev is not None:
             parts = dev.partitions()
             if parts[0][0] == '1':
-                idx = self.fs.findText(parts[0][1])
+                if 'fat' in parts[0][1]:
+                    idx = self.fs.findText('vfat')
+                else:
+                    idx = self.fs.findText(parts[0][1])
                 self.fs.setCurrentIndex(idx)
 
     @pyqtSlot()

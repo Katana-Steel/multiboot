@@ -22,6 +22,7 @@ done
 
 * python-qt5 or python3-pyqt5
 * grub2
+* pyparted (python-parted)
 * filesystem creation tools of your choice, supported:
   * ext4
   * vfat
@@ -38,7 +39,8 @@ something simple like this:
 sudo sfdisk /dev/sdb --part-type 1 83
 sudo sfdisk -A /dev/sdb 1
 sudo mkfs.xfs /dev/sdb1
-sudo grub-install /dev/sdb
+sudo mount /dev/sdb1 /mnt/usb0
+sudo grub-install --root-directory/mnt/usb0 /dev/sdb
 ```
 with
 ```

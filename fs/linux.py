@@ -2,6 +2,7 @@ import os
 import tempfile
 from subprocess import call as os_call
 import subprocess
+import parted
 
 
 class MkFSException(Exception):
@@ -33,6 +34,8 @@ class mk_vfat(mkfs):
 class usbDev:
     def __init__(self, path):
         self.path = path
+        self.device = parted.getDevice(path)
+        self.part_prefix = ''
         self.parts = self.partitions()
 
     def __str__(self):
@@ -55,19 +58,10 @@ class usbDev:
 
     def partitions(self):
         pts = []
-        with subprocess.Popen(['sudo', 'blkid'],
-                              stdout=subprocess.PIPE,
-                              universal_newlines=True) as fs_list:
-            for line in fs_list.stdout.read().split('\n'):
-                if self.path in line and 'TYPE' in line:
-                    t = line.replace(self.path, '').split(':')
-                    partno = t[0]
-                    fs_type = None
-                    for opts in t[1].split(' '):
-                        if 'TYPE' in opts[:4]:
-                            fs_type = opts.split('"')[1]
-                    if fs_type is not None:
-                        pts.append((partno, fs_type))
+        disk = parted.Disk(self.device)
+        for part in disk.partitions:
+            pts.append((self.part_prefix + str(part.number),
+                        part.fileSystem.type))
         return pts
 
 
@@ -86,19 +80,22 @@ class vUsbDev(usbDev):
                 self.path = out[0]
             else:
                 self.path = '/dev/loop0'
+            self.part_prefix = 'p'
         os_call(['sudo', 'losetup', '-P', self.path, self.image_file])
-        sfdisk_cmd = """
-label: dos
-label-id: 0x87b7e465
-device: /dev/loop0
-unit: sectors
-
-/dev/loop0p1 : start=        2048, size=       37952, type=c
-"""
-        with subprocess.Popen(['sudo', 'sfdisk', self.path],
-                              stdin=subprocess.PIPE,
-                              universal_newlines=True) as fdisk:
-            fdisk.communicate(input=sfdisk_cmd)
+        self.device = parted.getDevice(self.path)
+        disk = parted.freshDisk(self.device, 'msdos')
+        geom = parted.Geometry(self.device, start=1,
+                               length=self.device.getLength() - 1)
+        fs = parted.FileSystem('fat16', geom)
+        new_part = parted.Partition(disk=disk, type=parted.PARTITION_NORMAL,
+                                    fs=fs, geometry=geom)
+        disk.addPartition(partition=new_part,
+                          constraint=self.device.getConstraint())
+        new_part.setFlag(parted.PARTITION_BOOT)
+        try:
+            disk.commit()
+        except:
+            pass
         self.format(mk_vfat(), 0)
         self.parts = self.partitions()
         self.__undoLo = ['sudo', 'losetup', '-d', self.path]
